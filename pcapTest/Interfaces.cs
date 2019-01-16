@@ -23,25 +23,6 @@ namespace pcapTest
         public Interfaces()
         {
             InitializeComponent();
-
-
-             /*
-
-            
-
-            // this never executes
-            // Wait for 'Enter' from the user.
-            Console.ReadLine();
-
-            // Stop the capturing process
-            wifi_device.StopCapture();
-
-            // Close the pcap device
-            wifi_device.Close();
-            Console.WriteLine("Stopped");
-
-           Console.WriteLine();*/
-
         }
 
         private void Interfaces_Load(object sender, EventArgs e)

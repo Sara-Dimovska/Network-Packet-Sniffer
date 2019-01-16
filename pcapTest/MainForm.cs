@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows.Forms;
@@ -14,10 +15,12 @@ namespace pcapTest
         List<LibPcapLiveDevice> interfaceList = new List<LibPcapLiveDevice>();
         int selectedIntIndex;
         LibPcapLiveDevice wifi_device;
+        CaptureFileWriterDevice captureFileWriter;
 
         int packetNumber = 1;
         string time_str = "", sourceIP = "", destinationIP = "", protocol_type = "", length = "";
 
+        bool startCapturingAgain = false;
 
         public MainForm(List<LibPcapLiveDevice> interfaces, int selectedIndex)
         {
@@ -36,28 +39,69 @@ namespace pcapTest
             System.Windows.Forms.Application.Exit();
         }
 
-        private void button1_Click(object sender, EventArgs e) // START
-        {
-           
-        }
-
         private void toolStripButton1_Click(object sender, EventArgs e)// Start sniffing
         {
-            backgroundWorker1.RunWorkerAsync();
-            toolStripButton1.Enabled = false;
+            if(startCapturingAgain == false)
+            {
+                System.IO.File.Delete(Environment.CurrentDirectory + "capture.pcap");
+                backgroundWorker1.RunWorkerAsync();
+                toolStripButton1.Enabled = false;
+                toolStripButton2.Enabled = true;
+                textBox1.Enabled = false;
+
+            }
+
+            if (startCapturingAgain)
+            {
+                if (MessageBox.Show("Your packets are captured in a file. Starting a new capture will override existing ones.", "Confirm", MessageBoxButtons.OK, MessageBoxIcon.Warning) == DialogResult.OK)
+                {
+                    // user clicked ok
+                    System.IO.File.Delete(Environment.CurrentDirectory + "capture.pcap");
+                    listView1.Items.Clear();
+                    packetNumber = 1;
+
+                    backgroundWorker1.RunWorkerAsync();
+                    toolStripButton1.Enabled = false;
+                    toolStripButton2.Enabled = true;
+                    textBox1.Enabled = false;
+
+                }
+            }
+
+            startCapturingAgain = true;
         }
+
+        private void listView1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            
+                //var protocol = listView1.SelectedIndices[0].SubItems[4].Text;
+               // Console.WriteLine(protocol.ToString());
+
+            
+        }
+        // TODO paket information
+        private void listView1_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+        {
+            string protocol = e.Item.SubItems[4].Text;
+            switch (protocol)
+            {
+                case "TCP":
+                    break;
+                
+            }
+        }
+
 
         private void toolStripButton2_Click(object sender, EventArgs e)// Stop sniffing
         {
-            // Stop the capturing process
             wifi_device.StopCapture();
-
-            // Close the pcap device
             wifi_device.Close();
-            //label1.Text = "Start sniffing";
+            captureFileWriter.Close();
 
             backgroundWorker1.CancelAsync();
             toolStripButton1.Enabled = true;
+            textBox1.Enabled = true;
+            toolStripButton2.Enabled = false;
         }
 
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
@@ -74,15 +118,29 @@ namespace pcapTest
                 // Console.WriteLine("-- Listening on {0} -- ",
                 //  wifi_device.Interface.FriendlyName);
 
+
+
                 // Start the capturing process
-                wifi_device.Capture();
+                if(wifi_device.Opened == true)
+                {
+                    if(textBox1.Text != "")
+                    {
+                        wifi_device.Filter = textBox1.Text;
+                    }
+                    captureFileWriter = new CaptureFileWriterDevice(wifi_device, Environment.CurrentDirectory + "capture.pcap");
+                    wifi_device.Capture();
+                }
+                else
+                {
+                    wifi_device.Open(DeviceMode.Promiscuous, readTimeoutMilliseconds);
+                }
 
             }
 
             else if (backgroundWorker1.CancellationPending)
             {           
                 e.Cancel = true;
-                Console.WriteLine("stopped");
+                Console.WriteLine("STOPPED");
             }
         }
 
@@ -90,7 +148,7 @@ namespace pcapTest
         {
             if (e.Cancelled == true)
             {
-
+                Console.WriteLine("stopped");
             }
             else if (e.Error != null)
             {
@@ -104,11 +162,13 @@ namespace pcapTest
 
         public void Device_OnPacketArrival(object sender, CaptureEventArgs e)
         {
-               DateTime time = e.Packet.Timeval.Date;
-                time_str = time.Hour + ":" + time.Minute + ":" + time.Second + ":" + time.Millisecond;
+            // dump to a file
+            captureFileWriter.Write(e.Packet);
+
+            DateTime time = e.Packet.Timeval.Date;
+                time_str = (time.Hour + 1 ) + ":" + time.Minute + ":" + time.Second + ":" + time.Millisecond;
                 length = e.Packet.Data.Length.ToString();
 
-                // number time source dest protocol len
 
                 var packet = PacketDotNet.Packet.ParsePacket(e.Packet.LinkLayerType, e.Packet.Data);
 
@@ -139,9 +199,9 @@ namespace pcapTest
                     Action action = () => listView1.Items.Add(item);
                     listView1.Invoke(action);
 
-                    Console.WriteLine("{0}  time = {1} Len={2} {3} -> {4}  Protocol = {5}",
-                       packetNumber.ToString(), time_str, length,
-                  sourceIP, destinationIP, protocol_type);
+                    //Console.WriteLine("{0}  time = {1} Len={2} {3} -> {4}  Protocol = {5}",
+                      // packetNumber.ToString(), time_str, length,
+                  // sourceIP, destinationIP, protocol_type);
 
                     /*
                     if (tcpPacket != null)
@@ -165,9 +225,6 @@ namespace pcapTest
                     }*/
                     packetNumber++;
                 }
-
-            
-
         }
     }
 }
