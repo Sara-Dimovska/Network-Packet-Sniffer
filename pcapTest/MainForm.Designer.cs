@@ -111,7 +111,6 @@
             this.listView1.UseCompatibleStateImageBehavior = false;
             this.listView1.View = System.Windows.Forms.View.Details;
             this.listView1.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.listView1_ItemSelectionChanged);
-            this.listView1.SelectedIndexChanged += new System.EventHandler(this.listView1_SelectedIndexChanged);
             // 
             // columnHeader1
             // 
@@ -226,6 +225,7 @@
             this.toolStripButton3.Size = new System.Drawing.Size(24, 24);
             this.toolStripButton3.Text = "toolStripButton3";
             this.toolStripButton3.ToolTipText = "Previous packet";
+            this.toolStripButton3.Click += new System.EventHandler(this.toolStripButton3_Click);
             // 
             // toolStripButton4
             // 
@@ -236,6 +236,7 @@
             this.toolStripButton4.Size = new System.Drawing.Size(24, 24);
             this.toolStripButton4.Text = "toolStripButton4";
             this.toolStripButton4.ToolTipText = "Next packet";
+            this.toolStripButton4.Click += new System.EventHandler(this.toolStripButton4_Click);
             // 
             // toolStripButton5
             // 
@@ -246,6 +247,7 @@
             this.toolStripButton5.Size = new System.Drawing.Size(24, 24);
             this.toolStripButton5.Text = "toolStripButton5";
             this.toolStripButton5.ToolTipText = "First packet";
+            this.toolStripButton5.Click += new System.EventHandler(this.toolStripButton5_Click);
             // 
             // toolStripButton6
             // 
@@ -256,6 +258,7 @@
             this.toolStripButton6.Size = new System.Drawing.Size(24, 24);
             this.toolStripButton6.Text = "toolStripButton6";
             this.toolStripButton6.ToolTipText = "Last packet";
+            this.toolStripButton6.Click += new System.EventHandler(this.toolStripButton6_Click);
             // 
             // label2
             // 
