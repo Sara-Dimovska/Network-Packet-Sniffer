@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows.Forms;
@@ -22,7 +23,8 @@ namespace pcapTest
         string time_str = "", sourceIP = "", destinationIP = "", protocol_type = "", length = "";
 
         bool startCapturingAgain = false;
-        bool bgProcess = false;
+
+        Thread sniffing;
 
         public MainForm(List<LibPcapLiveDevice> interfaces, int selectedIndex)
         {
@@ -31,8 +33,6 @@ namespace pcapTest
             selectedIntIndex = selectedIndex;
             // Extract a device from the list
             wifi_device = interfaceList[selectedIntIndex];
-            backgroundWorker1.WorkerSupportsCancellation = true;
-
         }
 
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
@@ -45,8 +45,9 @@ namespace pcapTest
             if(startCapturingAgain == false) //first time 
             {
                 System.IO.File.Delete(Environment.CurrentDirectory + "capture.pcap");
-                bgProcess = true;
-                backgroundWorker1.RunWorkerAsync();
+                wifi_device.OnPacketArrival += new PacketArrivalEventHandler(Device_OnPacketArrival);
+                sniffing = new Thread(new ThreadStart(sniffing_Proccess));
+                sniffing.Start();
                 toolStripButton1.Enabled = false;
                 toolStripButton2.Enabled = true;
                 textBox1.Enabled = false;
@@ -62,12 +63,12 @@ namespace pcapTest
                     capturedPackets_list.Clear();
                     packetNumber = 1;
                     textBox2.Text = "";
-                    bgProcess = true;
-                    backgroundWorker1.RunWorkerAsync();
+                    wifi_device.OnPacketArrival += new PacketArrivalEventHandler(Device_OnPacketArrival);
+                    sniffing = new Thread(new ThreadStart(sniffing_Proccess));
+                    sniffing.Start();
                     toolStripButton1.Enabled = false;
                     toolStripButton2.Enabled = true;
                     textBox1.Enabled = false;
-
                 }
             }
             startCapturingAgain = true;
@@ -200,8 +201,7 @@ namespace pcapTest
 
         private void toolStripButton2_Click(object sender, EventArgs e)// Stop sniffing
         {
-            bgProcess = false;
-            backgroundWorker1.CancelAsync();
+            sniffing.Abort();
             wifi_device.StopCapture();
             wifi_device.Close();
             captureFileWriter.Close();
@@ -211,52 +211,21 @@ namespace pcapTest
             toolStripButton2.Enabled = false;
         }
 
-        private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
+        private void sniffing_Proccess()
         {
-            if (!backgroundWorker1.CancellationPending)
+            // Open the device for capturing
+            int readTimeoutMilliseconds = 1000;
+            wifi_device.Open(DeviceMode.Promiscuous, readTimeoutMilliseconds);
+
+            // Start the capturing process
+            if (wifi_device.Opened)
             {
-                wifi_device.OnPacketArrival += new PacketArrivalEventHandler(Device_OnPacketArrival);
-
-                // Open the device for capturing
-                int readTimeoutMilliseconds = 1000;
-                wifi_device.Open(DeviceMode.Promiscuous, readTimeoutMilliseconds);
-
-                // Start the capturing process
-                if(wifi_device.Opened && bgProcess)
+                if (textBox1.Text != "")
                 {
-                    if(textBox1.Text != "")
-                    {
-                        wifi_device.Filter = textBox1.Text;
-                    }
-                    captureFileWriter = new CaptureFileWriterDevice(wifi_device, Environment.CurrentDirectory + "capture.pcap");
-                    wifi_device.Capture();
+                    wifi_device.Filter = textBox1.Text;
                 }
-                else
-                {
-                   // wifi_device.Open(DeviceMode.Promiscuous, readTimeoutMilliseconds);
-                }
-
-            }
-            else if (backgroundWorker1.CancellationPending)
-            {           
-                e.Cancel = true;
-                Console.WriteLine("STOPPED");
-            }
-        }
-
-        private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            if (e.Cancelled == true)
-            {
-                Console.WriteLine("stopped");
-            }
-            else if (e.Error != null)
-            {
-                MessageBox.Show(e.Error.Message);
-            }
-            else
-            {
-                //
+                captureFileWriter = new CaptureFileWriterDevice(wifi_device, Environment.CurrentDirectory + "capture.pcap");
+                wifi_device.Capture();
             }
         }
 
