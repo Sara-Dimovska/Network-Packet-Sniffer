@@ -80,6 +80,7 @@
             this.chooseInterfaceToolStripMenuItem.Name = "chooseInterfaceToolStripMenuItem";
             this.chooseInterfaceToolStripMenuItem.Size = new System.Drawing.Size(195, 26);
             this.chooseInterfaceToolStripMenuItem.Text = "Choose interface";
+            this.chooseInterfaceToolStripMenuItem.Click += new System.EventHandler(this.chooseInterfaceToolStripMenuItem_Click);
             // 
             // viewToolStripMenuItem
             // 
@@ -157,9 +158,9 @@
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label1.Location = new System.Drawing.Point(8, 502);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(159, 20);
+            this.label1.Size = new System.Drawing.Size(148, 20);
             this.label1.TabIndex = 8;
-            this.label1.Text = "Protocol Information";
+            this.label1.Text = "Packet Information";
             // 
             // textBox2
             // 
