@@ -6,6 +6,6 @@ Packet capturing (or packet sniffing) is the process of collecting all packets o
 The purpose of SharpPcap(WinPcap wrapper) is to provide a framework for capturing, injecting and analyzing network packets for .NET applications.
 
 
-![Screenshot_2](https://raw.githubusercontent.com/t3mpv4r/Network-Packet-Sniffer/master/Screenshot_2.png)
+![Screenshot_2](https://raw.githubusercontent.com/t3mpv4r/Network-Packet-Sniffer/master/screenshots/Screenshot_2.png)
 
-![Screenshot_3](https://raw.githubusercontent.com/t3mpv4r/Network-Packet-Sniffer/master/Screenshot_3.png)
+![Screenshot_3](https://raw.githubusercontent.com/t3mpv4r/Network-Packet-Sniffer/master/screenshots/Screenshot_3.png)
